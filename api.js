@@ -6,11 +6,7 @@ function version(req, res, next){
 }
 
 function authenticate(req, res, next){
-	console.log(req.path);
-	console.log(req.query);
-	console.log(req.params);
-	
-
+	res.json({token : "users"});
 }
 
 function respond(req, res, next) {
@@ -21,22 +17,24 @@ function respond(req, res, next) {
 
 var server = restify.createServer();
 server.use(restify.queryParser({ mapParams: true }));
+server.use(restify.bodyParser({ mapParams: true }));
 
 // # Routes
 
 // ## Api version
+
 server.get('/', version);
-server.head('/', version);
 server.get('/api', version);
-server.head('/api', version);
 
 // ## Authentication
+
 server.get('/auth/:name', authenticate);
-server.head('/auth/:name', authenticate);
+server.post('/auth/:name', authenticate);
 
 // ## Hello
+
 server.get('/app/:app/:function', respond);
-server.head('/app/:app/:function', respond);
+
 
 // # Starting server
 
