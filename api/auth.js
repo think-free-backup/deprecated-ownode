@@ -10,22 +10,23 @@ exports.login = function(req,res,next){
 
     // > Check if logged and logout to remove current session
 
-    // > Check if the user/password are correct and get the uid
+    var cookies = new Cookies( req, res, null );
+    var user = cookies.get("user");
+    var session = cookies.get("session");
 
-    var db = new sqlite3.Database('config/users.sqlite');
+    auth.isSessionValid(user,session,function(uid){
 
-    db.serialize(function() {
+        if ( uid > 0 ){
 
-        db.get("SELECT uid FROM users where name = ? and password = ? ",[req.params.user,req.params.pass] , function(err, row) {
+            // > Removing the session
+            console.log("Removing current session");
+            auth.deleteSession(user,session); // FIXME : DATABASE MAY BE LOCKED
+        }
 
-            if (row != undefined){
+        // > Check if the user/password are correct and get the uid
 
-                // > Getting user id
-
-                var uid = row.uid;
-
-                // > Create a session
-
+        auth.checkCredential(req.params.user,req.params.pass,function(uid){
+            if (uid != -1){
                 var session = auth.createSession(uid);
 
                 // > Setting cookies
@@ -45,12 +46,8 @@ exports.login = function(req,res,next){
             else{
                 res.json({status : "user/password invalid" });
             }
-
         });
-
     });
-
-    db.close();
 };
 
 exports.isLogged = function(req,res,next){
