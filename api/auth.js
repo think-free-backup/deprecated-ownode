@@ -19,34 +19,39 @@ exports.login = function(req,res,next){
         if ( uid > 0 ){
 
             // > Removing the session
-            console.log("Removing current session");
-            auth.deleteSession(user,session); // FIXME : DATABASE MAY BE LOCKED
+            auth.deleteSession(user,session,follow); // FIXME : DATABASE MAY BE LOCKED
+        }
+        else{
+            follow();
         }
 
         // > Check if the user/password are correct and get the uid
 
-        auth.checkCredential(req.params.user,req.params.pass,function(uid){
-            if (uid != -1){
-                var session = auth.createSession(uid);
+        function follow(){
+            auth.checkCredential(req.params.user,req.params.pass,function(uid){
+                if (uid != -1){
+                    var session = auth.createSession(uid);
 
-                // > Setting cookies
+                    // > Setting cookies
 
-                if (session.status == "ok"){
-                    var cookies = new Cookies( req, res, null );
+                    if (session.status == "ok"){
+                        var cookies = new Cookies( req, res, null );
 
-                    cookies.set( "user", session.user, {  httpOnly: false } );
-                    cookies.set( "session", session.sid, {  httpOnly: false } );
+                        cookies.set( "user", session.user, {  httpOnly: false } );
+                        cookies.set( "session", session.sid, {  httpOnly: false } );
 
-                    res.json({status : "ok"});
+                        res.json({status : "ok"});
+                    }
+                    else{
+                        res.json({status : "error", body : "can't create session" });
+                    }
                 }
                 else{
-                    res.json({status : "error", body : "can't create session" });
+                    res.json({status : "user/password invalid" });
                 }
-            }
-            else{
-                res.json({status : "user/password invalid" });
-            }
-        });
+            });
+        }
+
     });
 };
 
@@ -82,7 +87,24 @@ exports.isLogged = function(req,res,next){
 };
 
 exports.logout = function(req,res,next){
+    // > Check if logged and logout to remove current session
 
+    var cookies = new Cookies( req, res, null );
+    var user = cookies.get("user");
+    var session = cookies.get("session");
+
+    auth.isSessionValid(user,session,function(uid){
+
+        if ( uid > 0 ){
+
+            // > Removing the session
+            auth.deleteSession(user,session); // FIXME : DATABASE MAY BE LOCKED
+            res.json({status : "ok", body : "session deleted"});
+        }
+        else{
+            res.json({status : "nok", body : "session doesn't exists" });
+        }
+    });
 };
 
 exports.addUser = function(req,res,next){

@@ -7,6 +7,7 @@
 var restify = require('restify');
 var path = require('path');
 var auth = require('./lib/auth');
+var Cookies = require("cookies");
 
 // # Configuration
 
@@ -20,32 +21,71 @@ var config = {
     configured : false
 };
 
-if (path.existsSync('config/maindb.sqlite')) {
+if (path.existsSync('config/users.sqlite')) {
     config.configured = true;
 }
 else{
     auth.createDatabase();
 }
 
-var api = [];
-var apps = [];
+var api_public = [];
+var api_private = [];
+var api_node = [];
+
+var apps_public = [];
+var apps_secure = [];
+var apps_node = [];
 
 // # Loading core api
 
-// # Loading applications
-
+    // ## Public
 require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
-    var name = file.split(".js")[0];
-    api[name] = require("./" + config.apiRoute + "/" + file);
-    console.log("Loading api module : " + name);
+    if (path.existsSync("./" + config.apiRoute + "/" + file + "/public.js")) {
+        console.log("Loading api module : " + file + " public");
+        api_public[file] = require("./" + config.apiRoute + "/" + file + "/public.js");
+    }
+});
+
+    // ## Private
+require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
+    if (path.existsSync("./" + config.apiRoute + "/" + file + "/private.js")) {
+        console.log("Loading api module : " + file + " private");
+        api_private[file] = require("./" + config.apiRoute + "/" + file + "/private.js");
+    }
+});
+
+    // ## Node Communication
+require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
+    if (path.existsSync("./" + config.apiRoute + "/" + file + "/node.js")) {
+        console.log("Loading api module : " + file + " node");
+        api_node[file] = require("./" + config.apiRoute + "/" + file + "/node.js");
+    }
 });
 
 // # Loading applications
 
+    // ## Public
 require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
-    var name = file.split(".js")[0];
-    apps[name] = require("./" + config.appRoute + "/" + file);
-    console.log("Loading application module : " + name);
+    if (path.existsSync("./" + config.appRoute + "/" + file + "/api/public.js")) {
+        console.log("Loading application module : " + file + " public");
+        apps_public[file] = require("./" + config.appRoute + "/" + file + "/api/public.js");
+    }
+});
+
+    // ## Private
+require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
+    if (path.existsSync("./" + config.appRoute + "/" + file + "/api/private.js")) {
+        console.log("Loading application module : " + file + " private");
+        apps_secure[file] = require("./" + config.appRoute + "/" + file + "/api/private.js");
+    }
+});
+
+    // ## Node communication
+require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
+    if (path.existsSync("./" + config.appRoute + "/" + file + "/api/node.js")) {
+        console.log("Loading application module : " + file + " node");
+        apps_node[file] = require("./" + config.appRoute + "/" + file + "/api/node.js");
+    }
 });
 
 // # Creating server
@@ -64,11 +104,15 @@ server.get('/version', version);
 
 // ## Core api
 
-server.get('/core/:module/:function', callApi);
+server.get('/core/:module/public/:function', callPublicApi);
+server.get('/core/:module/private/:function', callPrivateApi);
+server.get('/core/:module/node/:function', callNodeApi);
 
 // ## Applications
 
-server.get('/app/:app/:function', callApplication);
+server.get('/app/:app/public/:function', callApplicationPublic);
+server.get('/app/:app/secure/:function', callApplicationSecure);
+server.get('/app/:app/node/:function', callApplicationNode);
 
 // # Starting server
 
@@ -86,11 +130,9 @@ function version(req, res, next){
 
 // ## Core api call
 
-function callApi(req,res,next){
+function callPublicApi(req,res,next){
 
-    // TODO : Check here if loged or not except for the login and isLogged
-
-    var module = api[req.params.module];
+    var module = api_public[req.params.module];
 
     if (module != undefined){
         var fct = module[req.params.function];
@@ -104,13 +146,43 @@ function callApi(req,res,next){
     res.json({type : "error", body : "This application/function doesn't exist in the api"});
 }
 
+function callPrivateApi(req,res,next){
+
+    var cookies = new Cookies( req, res, null );
+
+    auth.isSessionValid(cookies.get("user"), cookies.get("session"),function(uid){
+
+        if ( uid > 0 ){
+
+            var module = api_private[req.params.module];
+
+            if (module != undefined){
+                var fct = module[req.params.function];
+                if (fct != undefined){
+                    fct(req,res,next);
+                    return;
+                }
+            }
+        }
+        else{
+            res.json({type : "not logged", body : "You are not logged"});
+            return;
+        }
+
+        // Module / function not found
+        res.json({type : "error", body : "This application/function doesn't exist in the api"});
+    });
+}
+
+function callNodeApi(req,res,next){
+
+}
+
 // ## 3rdParty application call
 
-function callApplication(req, res, next) {
+function callApplicationPublic(req, res, next) {
 
-    // TODO : Check here if loged or not
-
-    var module = apps[req.params.app];
+    var module = apps_public[req.params.app];
 
     if (module != undefined){
         var fct = module[req.params.function];
@@ -122,4 +194,36 @@ function callApplication(req, res, next) {
 
     // Module / function not found
     res.json({type : "error", body : "This application/function doesn't exist in the api"});
+}
+
+function callApplicationSecure(req, res, next) {
+
+    var cookies = new Cookies( req, res, null );
+
+    auth.isSessionValid(cookies.get("user"), cookies.get("session"),function(uid){
+
+        if ( uid > 0 ){
+
+            var module = apps_secure[req.params.app];
+
+            if (module != undefined){
+                var fct = module[req.params.function];
+                if (fct != undefined){
+                    fct(req,res,next);
+                    return;
+                }
+            }
+        }
+        else{
+            res.json({type : "not logged", body : "You are not logged"});
+            return;
+        }
+
+        // Module / function not found
+        res.json({type : "error", body : "This application/function doesn't exist in the api"});
+    });
+}
+
+function callApplicationNode(req,res,next){
+
 }
