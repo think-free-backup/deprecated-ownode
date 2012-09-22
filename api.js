@@ -18,10 +18,12 @@ var config = {
     apiRoute : "api",
     appRoute : "apps",
     port : 8000,
+    serverId : "",
     configured : false
 };
 
 if (path.existsSync('config/users.sqlite')) {
+    // TODO : Check if the root password is changed
     config.configured = true;
 }
 else{

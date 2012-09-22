@@ -32,4 +32,4 @@ exports.delUserFromGroup = function(req,res,next){
 
 exports.userGroups = function(req,res,next){
     res.json({status : "error", body : "Not implemented"});
-};º º       111º
+};
