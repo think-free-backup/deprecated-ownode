@@ -6,4 +6,4 @@ node webdav.js &
 
 sleep 5
 
-sudo haproxy -f config/haproxy.cfg -V &
+sudo haproxy -f config/haproxy.cfg -V 
