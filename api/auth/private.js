@@ -3,7 +3,6 @@
 var Cookies = require("cookies");
 var path = require('path');
 var auth = require('../../lib/auth');
-var sqlite3 = require('sqlite3').verbose();
 
 
 exports.addUser = function(req,res,next){
