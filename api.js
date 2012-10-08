@@ -6,10 +6,12 @@
 
 var restify = require('restify');
 var path = require('path');
-var auth = require('./lib/auth');
 var Cookies = require("cookies");
+
 var database = require("./lib/database");
 var cfManager = require("./lib/configManager");
+
+var auth = require('./api/auth/lib/auth');
 
 // # Database connection holding
 
@@ -34,6 +36,7 @@ function start(){
 
     database.init(config,db);
 
+    var api_db = [];
     var api_public = [];
     var api_private = [];
     var api_node = [];
@@ -44,31 +47,48 @@ function start(){
 
 // # Loading core api
 
+    // ## Database
+    require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
+        if (path.existsSync("./" + config.apiRoute + "/" + file + "/db.js")) {
+            console.log("Loading api module : " + file + " db");
+            api_db[file] = require("./" + config.apiRoute + "/" + file + "/db.js");
+            api_db[file].init();
+        }
+    });
+
     // ## Public
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
-        if (path.existsSync("./" + config.apiRoute + "/" + file + "/public.js")) {
+        if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/public.js")) {
             console.log("Loading api module : " + file + " public");
-            api_public[file] = require("./" + config.apiRoute + "/" + file + "/public.js");
+            api_public[file] = require("./" + config.apiRoute + "/" + file + "/api/public.js");
         }
     });
 
     // ## Private
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
-        if (path.existsSync("./" + config.apiRoute + "/" + file + "/private.js")) {
+        if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/private.js")) {
             console.log("Loading api module : " + file + " private");
-            api_private[file] = require("./" + config.apiRoute + "/" + file + "/private.js");
+            api_private[file] = require("./" + config.apiRoute + "/" + file + "/api/private.js");
         }
     });
 
     // ## Node Communication
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
-        if (path.existsSync("./" + config.apiRoute + "/" + file + "/node.js")) {
+        if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/node.js")) {
             console.log("Loading api module : " + file + " node");
-            api_node[file] = require("./" + config.apiRoute + "/" + file + "/node.js");
+            api_node[file] = require("./" + config.apiRoute + "/" + file + "/api/node.js");
         }
     });
 
 // # Loading applications
+
+    require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
+        if (path.existsSync("./" + config.appRoute + "/" + file + "/db.js")) {
+            console.log("Loading application module : " + file + " db");
+            api_db[file] = require("./" + config.appRoute + "/" + file + "/db.js");
+            api_db[file].init();
+        }
+    });
 
     // ## Public
     require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {

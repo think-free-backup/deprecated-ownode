@@ -2,7 +2,7 @@
 
 var Cookies = require("cookies");
 var path = require('path');
-var auth = require('../../lib/auth');
+var auth = require('../lib/auth');
 
 
 exports.addUser = function(req,res,next){

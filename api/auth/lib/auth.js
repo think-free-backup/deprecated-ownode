@@ -1,18 +1,18 @@
 
 var path = require('path');
 var sqlite3 = require('sqlite3').verbose();
-var base = require('./base');
+var base = require('../../../lib/base');
 
 // # Database
 
 // ## Create the user database
 exports.createDatabase = function(){
 
-    if (!path.existsSync('config/users.sqlite')) {
+    if (!path.existsSync('../../../config/users.sqlite')) {
 
         console.log("Creating database");
 
-        var db = new sqlite3.Database('config/users.sqlite');
+        var db = new sqlite3.Database('../../../config/users.sqlite');
 
         db.serialize(function() {
             db.run("CREATE TABLE users (uid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT)");
@@ -44,7 +44,7 @@ exports.createSession = function(uid){
         sid : base.getUid()
     };
 
-    var db = new sqlite3.Database('config/users.sqlite');
+    var db = new sqlite3.Database('../../../config/users.sqlite');
 
     db.serialize(function() {
         db.run("INSERT INTO sessions (uid,usid,sid,expire) VALUES (?,?,?,?)", [uid, session.user, session.sid, base.getCurrentTimeStamp() + 86400], function(){
@@ -60,7 +60,7 @@ exports.createSession = function(uid){
 // ## Get uid from user/password
 exports.checkCredential = function(user,password,callback){
 
-    var db = new sqlite3.Database('config/users.sqlite');
+    var db = new sqlite3.Database('../../../config/users.sqlite');
 
     db.serialize(function() {
 
@@ -95,7 +95,7 @@ exports.isSessionValid = function(usid, sid,callback){
     else{
         // > Database request to check if the session is correct or not
 
-        var db = new sqlite3.Database('config/users.sqlite');
+        var db = new sqlite3.Database('../../../config/users.sqlite');
 
         var users = new Array();
 
@@ -126,7 +126,7 @@ exports.isSessionValid = function(usid, sid,callback){
 
 // ## Remove a session
 exports.deleteSession = function(usid, sid, callback){
-    var db = new sqlite3.Database('config/users.sqlite');
+    var db = new sqlite3.Database('../../../config/users.sqlite');
     db.run("delete from sessions where usid = ? and sid = ?",[usid,sid],function(){
         db.close();
         if (callback !== undefined)
@@ -138,7 +138,7 @@ exports.deleteSession = function(usid, sid, callback){
 // ## Create a new user
 exports.addUser = function(user,pass,callback){
 
-    var db = new sqlite3.Database('config/users.sqlite');
+    var db = new sqlite3.Database('../../../config/users.sqlite');
 
     db.serialize(function() {
         db.run("INSERT INTO users (name,password) VALUES (' " + user + " ',' " + pass + " ')", function(){
@@ -151,7 +151,7 @@ exports.addUser = function(user,pass,callback){
 
 // ## Delete a user
 exports.delUser = function(user,callback){
-    var db = new sqlite3.Database('config/users.sqlite');
+    var db = new sqlite3.Database('../../../config/users.sqlite');
 
     db.serialize(function() {
         db.run("DELETE FROM users WHERE name = ' " + user +" '", function(){
