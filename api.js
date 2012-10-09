@@ -34,7 +34,7 @@ else{
 
 function start(){
 
-    database.init(config,db);
+    db = database.init(config,db);
 
     var api_db = [];
     var api_public = [];
@@ -52,7 +52,7 @@ function start(){
         if (path.existsSync("./" + config.apiRoute + "/" + file + "/db.js")) {
             console.log("Loading api module : " + file + " db");
             api_db[file] = require("./" + config.apiRoute + "/" + file + "/db.js");
-            api_db[file].init();
+            api_db[file].init(db,config);
         }
     });
 
@@ -86,7 +86,7 @@ function start(){
         if (path.existsSync("./" + config.appRoute + "/" + file + "/db.js")) {
             console.log("Loading application module : " + file + " db");
             api_db[file] = require("./" + config.appRoute + "/" + file + "/db.js");
-            api_db[file].init();
+            api_db[file].init(db,config);
         }
     });
 
@@ -163,7 +163,7 @@ function start(){
         if (module != undefined){
             var fct = module[req.params.function];
             if (fct != undefined){
-                fct(req,res,next);
+                fct(db,req,res,next);
                 return;
             }
         }
@@ -185,7 +185,7 @@ function start(){
                 if (module != undefined){
                     var fct = module[req.params.function];
                     if (fct != undefined){
-                        fct(req,res,next);
+                        fct(db,req,res,next);
                         return;
                     }
                 }
@@ -213,7 +213,7 @@ function start(){
         if (module != undefined){
             var fct = module[req.params.function];
             if (fct != undefined){
-                fct(req,res,next);
+                fct(db,req,res,next);
                 return;
             }
         }
@@ -235,7 +235,7 @@ function start(){
                 if (module != undefined){
                     var fct = module[req.params.function];
                     if (fct != undefined){
-                        fct(req,res,next);
+                        fct(db,req,res,next);
                         return;
                     }
                 }

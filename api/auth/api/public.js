@@ -4,7 +4,7 @@ var Cookies = require("cookies");
 var path = require('path');
 var auth = require('../lib/auth');
 
-exports.login = function(req,res,next){
+exports.login = function(db,req,res,next){
 
     // > Check if logged and logout to remove current session
 
@@ -12,12 +12,12 @@ exports.login = function(req,res,next){
     var user = cookies.get("user");
     var session = cookies.get("session");
 
-    auth.isSessionValid(user,session,function(uid){
+    auth.isSessionValid(db,user,session,function(uid){
 
         if ( uid > 0 ){
 
             // > Removing the session
-            auth.deleteSession(user,session,follow); // FIXME : DATABASE MAY BE LOCKED
+            auth.deleteSession(db,user,session,follow); // FIXME : DATABASE MAY BE LOCKED
         }
         else{
             follow();
@@ -26,9 +26,9 @@ exports.login = function(req,res,next){
         // > Check if the user/password are correct and get the uid
 
         function follow(){
-            auth.checkCredential(req.params.user,req.params.pass,function(uid){
+            auth.checkCredential(db,req.params.user,req.params.pass,function(uid){
                 if (uid != -1){
-                    var session = auth.createSession(uid);
+                    var session = auth.createSession(db,uid);
 
                     // > Setting cookies
 
@@ -53,13 +53,13 @@ exports.login = function(req,res,next){
     });
 };
 
-exports.isLogged = function(req,res,next){
+exports.isLogged = function(db,req,res,next){
 
     // > Get the cookies values
 
     var cookies = new Cookies( req, res, null );
 
-    auth.isSessionValid(cookies.get("user"), cookies.get("session"),function(uid){
+    auth.isSessionValid(db,cookies.get("user"), cookies.get("session"),function(uid){
 
         if ( uid > 0 ){
 
@@ -71,10 +71,7 @@ exports.isLogged = function(req,res,next){
                     res.json({status : "not logged", body : "You are not logged"});
                     break;
                 case -2 :
-                    res.json({status : "not logged", body : "session invalid"});
-                    break;
-                case -3 :
-                    res.json({status : "not logged", body : "session expired"});
+                      res.json({status : "not logged", body : "session expired"});
                     break;
                 default :
                     res.json({status : "not logged", body : "undefined error"});
@@ -84,19 +81,19 @@ exports.isLogged = function(req,res,next){
     });
 };
 
-exports.logout = function(req,res,next){
+exports.logout = function(db,req,res,next){
     // > Check if logged and logout to remove current session
 
     var cookies = new Cookies( req, res, null );
     var user = cookies.get("user");
     var session = cookies.get("session");
 
-    auth.isSessionValid(user,session,function(uid){
+    auth.isSessionValid(db,user,session,function(uid){
 
         if ( uid > 0 ){
 
             // > Removing the session
-            auth.deleteSession(user,session); // FIXME : DATABASE MAY BE LOCKED
+            auth.deleteSession(db,user,session); // FIXME : DATABASE MAY BE LOCKED
             res.json({status : "ok", body : "session deleted"});
         }
         else{

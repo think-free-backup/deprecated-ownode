@@ -1,42 +1,14 @@
 
 var path = require('path');
-var sqlite3 = require('sqlite3').verbose();
 var base = require('../../../lib/base');
+var database = require('../../../lib/database');
 
 // # Database
-
-// ## Create the user database
-exports.createDatabase = function(){
-
-    if (!path.existsSync('../../../config/users.sqlite')) {
-
-        console.log("Creating database");
-
-        var db = new sqlite3.Database('../../../config/users.sqlite');
-
-        db.serialize(function() {
-            db.run("CREATE TABLE users (uid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, password TEXT)");
-            db.run("CREATE TABLE groups (gid INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT)");
-            db.run("CREATE TABLE userInGroup (uid TEXT, gid TEXT)");
-            db.run("CREATE TABLE sessions (uid TEXT, usid TEXT, sid TEXT, expire TEXT)");
-            db.run("INSERT INTO users (name,password) VALUES ('root','root')");
-
-            db.run("CREATE TABLE serverConfig (key TEXT, value TEXT)");
-            db.run("INSERT INTO serverConfig(key,value) VALUES ('serverID', '" + base.getUid() +"' ");
-        });
-
-        db.close();
-
-        return true;
-    }
-    else
-        return false;
-}
 
 // # Session management
 
 // ## Create a new session
-exports.createSession = function(uid){
+exports.createSession = function(db,uid){
 
     var session = {
         status : "ok",
@@ -44,13 +16,9 @@ exports.createSession = function(uid){
         sid : base.getUid()
     };
 
-    var db = new sqlite3.Database('../../../config/users.sqlite');
 
-    db.serialize(function() {
-        db.run("INSERT INTO sessions (uid,usid,sid,expire) VALUES (?,?,?,?)", [uid, session.user, session.sid, base.getCurrentTimeStamp() + 86400], function(){
-            db.close();
-        });
-    });
+        db.query("INSERT INTO sessions (uid,usid,sid,expire) VALUES (?,?,?,?)", [uid, session.user, session.sid, base.getCurrentTimeStamp() + 86400],database.printError);
+
 
 
 
@@ -58,35 +26,28 @@ exports.createSession = function(uid){
 };
 
 // ## Get uid from user/password
-exports.checkCredential = function(user,password,callback){
+exports.checkCredential = function(db,user,password,callback){
 
-    var db = new sqlite3.Database('../../../config/users.sqlite');
+    db.query("SELECT uid FROM users where name = ? and password = ? ",[user,password] , function(err, results, fields) {
 
-    db.serialize(function() {
+        if (err){
+            callback (-1);
+            return;
+        }
 
-        db.get("SELECT uid FROM users where name = ? and password = ? ",[user,password] , function(err, row) {
+        if (results[0].uid != undefined){
 
-            db.close();
-
-            if (row != undefined){
-
-                // > Getting user id
-
-                var uid = row.uid;
-
-                callback(uid);
-            }
-            else{
-                callback(-1);
-            }
-
-        });
-
+            callback(results[0].uid);
+        }
+        else{
+            callback(-1);
+        }
     });
+
 };
 
 // ## Check if a session is valid
-exports.isSessionValid = function(usid, sid,callback){
+exports.isSessionValid = function(db,usid, sid,callback){
 
     // > Check undefined or not and check if values passed are not sql injection
     if (usid === undefined || sid === undefined){
@@ -95,40 +56,35 @@ exports.isSessionValid = function(usid, sid,callback){
     else{
         // > Database request to check if the session is correct or not
 
-        var db = new sqlite3.Database('../../../config/users.sqlite');
-
         var users = new Array();
 
-        db.serialize(function() {
+        db.query("SELECT uid,expire FROM sessions where usid = '" + usid + "' and sid = '" + sid + "' " , function(err, results, fields) {
 
-            db.get("SELECT uid,expire FROM sessions where usid = ? and sid = ? ",[usid,sid] , function(err, row) {
+            if (err){
+                callback (-3);
+                return;
+            }
 
-                db.close();
+            if (results[0] != undefined){
 
-                if (row != undefined){
-
-                    if ( row.expire > base.getCurrentTimeStamp() ){
-                        callback(row.uid);
-                    }
-                    else{
-                        callback(-3);
-                    }
+                if ( results[0].expire > base.getCurrentTimeStamp()){
+                    callback(results[0].uid);
                 }
                 else{
                     callback(-2);
                 }
-            });
+            }
+            else{
+                callback(-1);
+            }
         });
-
-
     }
 };
 
 // ## Remove a session
-exports.deleteSession = function(usid, sid, callback){
-    var db = new sqlite3.Database('../../../config/users.sqlite');
-    db.run("delete from sessions where usid = ? and sid = ?",[usid,sid],function(){
-        db.close();
+exports.deleteSession = function(db,usid, sid, callback){
+    db.query("delete from sessions where usid = ? and sid = ?",[usid,sid],function(){
+
         if (callback !== undefined)
             callback();
     });
@@ -136,58 +92,61 @@ exports.deleteSession = function(usid, sid, callback){
 };
 
 // ## Create a new user
-exports.addUser = function(user,pass,callback){
+exports.addUser = function(db,user,pass,callback){
 
-    var db = new sqlite3.Database('../../../config/users.sqlite');
+    db.query("INSERT INTO users (name,password) VALUES (' " + user + " ',' " + pass + " ')", function(){
 
-    db.serialize(function() {
-        db.run("INSERT INTO users (name,password) VALUES (' " + user + " ',' " + pass + " ')", function(){
-            db.close();
-            if (callback !== undefined)
-                callback();
-        });
+        if (err){
+            console.log(err);
+            return;
+        }
+
+        if (callback !== undefined)
+            callback();
     });
 };
 
 // ## Delete a user
-exports.delUser = function(user,callback){
-    var db = new sqlite3.Database('../../../config/users.sqlite');
+exports.delUser = function(db,user,callback){
 
-    db.serialize(function() {
-        db.run("DELETE FROM users WHERE name = ' " + user +" '", function(){
-            db.close();
-            if (callback !== undefined)
-                callback();
-        });
+    db.query("DELETE FROM users WHERE name = ' " + user +" '", function(){
+
+        if (err){
+            console.log(err);
+            return;
+        }
+
+        if (callback !== undefined)
+            callback();
     });
 };
 
 // ## Modify a user password
-exports.modifyUserPassword = function(uid, pass,callback){
+exports.modifyUserPassword = function(db,uid, pass,callback){
 
 };
 
 // ## Add a group
-exports.addGroup = function(group,callback){
+exports.addGroup = function(db,group,callback){
 
 };
 
 // ## Delete a group
-exports.delGroup = function(group,callback){
+exports.delGroup = function(db,group,callback){
 
 };
 
 // ## Add a user to a group
-exports.addUserToGroup = function(user,group,callback){
+exports.addUserToGroup = function(db,user,group,callback){
 
 };
 
 // ## Remove a user from a group
-exports.delUserFromGroup = function(user,group,callback){
+exports.delUserFromGroup = function(db,user,group,callback){
 
 };
 
 // ## List groups of user
-exports.userGroups = function(user,callback){
+exports.userGroups = function(db,user,callback){
 
 };
