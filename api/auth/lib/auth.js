@@ -35,7 +35,7 @@ exports.checkCredential = function(db,user,password,callback){
             return;
         }
 
-        if (results[0].uid != undefined){
+        if (results[0] != undefined && results[0].uid != undefined){
 
             callback(results[0].uid);
         }
@@ -92,9 +92,15 @@ exports.deleteSession = function(db,usid, sid, callback){
 };
 
 // ## Create a new user
-exports.addUser = function(db,user,pass,callback){
+exports.addUser = function(db,user, host, password, baseGroup, callback){
 
-    db.query("INSERT INTO users (name,password) VALUES (' " + user + " ',' " + pass + " ')", function(){
+    // If the host is ! local > password can be empty (login is only allowed by key)
+    // Base group is : root, user, invited, remote
+
+    // The key should be managed by the called of this function (create public/private key if local, add the posted key to key store if remote)
+    // Groups array should alse be managed by the called of this function
+
+    db.query("INSERT INTO users (name,host,password,baseGroup) VALUES ('" + user + "', '" + host + "' ,'" + password + "','" + baseGroup + "')", function(err, results, fields){
 
         if (err){
             console.log(err);
@@ -148,5 +154,5 @@ exports.delUserFromGroup = function(db,user,group,callback){
 
 // ## List groups of user
 exports.userGroups = function(db,user,callback){
-
+    // Should return an array with the baseGroup in the first position and the group array following
 };

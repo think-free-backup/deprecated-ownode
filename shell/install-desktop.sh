@@ -2,7 +2,7 @@
 
 # Preparing system
 
-sudo apt-get install nodejs npm haproxy libsqlite3-dev 
+sudo apt-get install node npm haproxy mysql-server build-essential
 sudo npm install -g node-gyp
 
 # Webdav
@@ -16,7 +16,6 @@ npm install restify
 # Sql
 
 npm install mysql
-npm install sqlite3
 
 # Cookies
 

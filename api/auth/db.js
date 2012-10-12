@@ -1,20 +1,21 @@
 var database = require('../../lib/database');
+var libAuth = require('./lib/auth');
 
 exports.init = function(db,config){
 
     console.log("Init auth database");
 
     database.tableDontExists('users',db,config,function(){
-        db.query ('create table users (uid INT NOT NULL AUTO_INCREMENT, name CHAR(30) NOT NULL, password CHAR(30) NOT NULL, PRIMARY KEY(uid) )' , function (err, results, fields){
+        db.query ('create table users (uid INT NOT NULL AUTO_INCREMENT, name CHAR(32) NOT NULL, host CHAR(64) NOT NULL,  password CHAR(32) NOT NULL, baseGroup CHAR(32) NOT NULL, PRIMARY KEY(uid) )' , function (err, results, fields){
             if (err){
                 console.log(err);
             }
-            db.query('insert into users(name,password) values (\'root\',\'root\')', database.printError);
+            libAuth.addUser(db,'root',config.serverHostname,'root',function(){console.log("User root added")})
         });
     });
 
     database.tableDontExists('groups',db,config,function(){
-        db.query ('create table groups (gid INT NOT NULL AUTO_INCREMENT, name CHAR(30) NOT NULL, PRIMARY KEY(gid) )' , function (err, results, fields){
+        db.query ('create table groups (gid INT NOT NULL AUTO_INCREMENT, name CHAR(32) NOT NULL, PRIMARY KEY(gid) )' , function (err, results, fields){
             if (err){
                 console.log(err);
             }
