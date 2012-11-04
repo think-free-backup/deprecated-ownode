@@ -1,5 +1,15 @@
 #!/bin/bash
 
+if [ ! -d keys ];
+then
+	mkdir keys
+fi
 
-openssl genrsa -out $1.pem 2048
-openssl rsa -pubout -in $1.pem -out $1.pub
+if [ ! -f keys/$1.pem ];
+then
+	openssl genrsa -out keys/$1.pem 4096
+	openssl rsa -pubout -in keys/$1.pem -out keys/$1.pub
+	exit 0
+else
+	exit -1
+fi

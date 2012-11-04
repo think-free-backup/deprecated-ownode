@@ -1,4 +1,14 @@
-/* This module is for authentication of the user */
+		
+/* **************************************************************** 
+ *
+ *  Description : Private part for authentication
+ *  License :     All the sources are available under the GPL v3
+ *                http://www.gnu.org/licenses/gpl.html
+ *  Author : Christophe Meurice
+ *  
+ *  (C) Meurice Christophe 2012
+ *
+ ****************************************************************** */
 
 var Cookies = require("cookies");
 var path = require('path');
@@ -32,3 +42,7 @@ exports.delUserFromGroup = function(db,req,res,next){
 exports.userGroups = function(db,req,res,next){
     res.json({status : "error", body : "Not implemented"});
 };
+
+exports.requestFriendShip = function(db,req,res,next){
+	res.json({status : "error", body : "Not implemented"});
+}

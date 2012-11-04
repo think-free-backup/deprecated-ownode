@@ -1,9 +1,20 @@
+        
+/* **************************************************************** 
+ *
+ *  Description : Librairy for authentication
+ *  License :     All the sources are available under the GPL v3
+ *                http://www.gnu.org/licenses/gpl.html
+ *  Author : Christophe Meurice
+ *  
+ *  (C) Meurice Christophe 2012
+ *
+ ****************************************************************** */
 
 var path = require('path');
 var base = require('../../../lib/base');
 var database = require('../../../lib/database');
-
-// # Database
+var cfManager = require("../../../lib/configManager");
+var exec = require('child_process').exec;
 
 // # Session management
 
@@ -16,12 +27,7 @@ exports.createSession = function(db,uid){
         sid : base.getUid()
     };
 
-
-        db.query("INSERT INTO sessions (uid,usid,sid,expire) VALUES (?,?,?,?)", [uid, session.user, session.sid, base.getCurrentTimeStamp() + 86400],database.printError);
-
-
-
-
+    db.query("INSERT INTO sessions (uid,usid,sid,expire) VALUES (?,?,?,?)", [uid, session.user, session.sid, base.getCurrentTimeStamp() + 86400],database.printError);
     return session;
 };
 
@@ -88,71 +94,249 @@ exports.deleteSession = function(db,usid, sid, callback){
         if (callback !== undefined)
             callback();
     });
-
 };
+
+// # User managment
 
 // ## Create a new user
 exports.addUser = function(db,user, host, password, baseGroup, callback){
 
-    // If the host is ! local > password can be empty (login is only allowed by key)
+    // The key should be managed by the caller of this function (create public/private key if local, add the posted key to key store if remote)
+    // Groups array should also be managed by the called of this function
     // Base group is : root, user, invited, remote
 
-    // The key should be managed by the called of this function (create public/private key if local, add the posted key to key store if remote)
-    // Groups array should alse be managed by the called of this function
+    var config = cfManager.loadConfig();
+
+    if (host == config.serverHostname){
+        if (password == ""){
+            if (callback !== undefined)
+                callback({status : "error", body : "password can't be empty for localhost"});    
+            return;
+        }
+    }
+    else{
+        if (baseGroup != "invited"){
+            if (callback !== undefined)
+                callback({status : "error", body : "remote user can't be in an other group than invited"});    
+            return;   
+        }
+    }
 
     db.query("INSERT INTO users (name,host,password,baseGroup) VALUES ('" + user + "', '" + host + "' ,'" + password + "','" + baseGroup + "')", function(err, results, fields){
 
         if (err){
             console.log(err);
+            if (callback !== undefined)
+                callback({status : "error", body : err});
             return;
         }
 
         if (callback !== undefined)
-            callback();
+            callback({status : "ok", body : "User added"});
     });
 };
 
 // ## Delete a user
 exports.delUser = function(db,user,callback){
 
-    db.query("DELETE FROM users WHERE name = ' " + user +" '", function(){
+     exports.getUidFromName(db,user,function(r_uid){
 
-        if (err){
-            console.log(err);
+        if (r_uid < 0){
+            callback({status : "error", body : "Can't get ugid : " + r_uid});
             return;
         }
+        else{
 
-        if (callback !== undefined)
-            callback();
+            db.query("DELETE FROM userInGroup where uid = '" + r_uid + "'", function(err, results, fields){
+
+                if (err){
+                    console.log(err);
+                    if (callback !== undefined)
+                        callback({status : "error", body : err});
+                    return;
+                }
+
+                db.query("DELETE FROM users WHERE name = ' " + user +" '", function(){
+
+                    if (err){
+                        console.log(err);
+                        return;
+                    }
+
+                    if (callback !== undefined)
+                        callback();
+                });
+            });
+        }
     });
 };
 
-// ## Modify a user password
+// ## Create a user public/private key
+exports.createUserKey = function(user,callback){
+
+    exec('shell/genkey.sh ' + user,callback);
+}
+
+// ## Modify a user password /* TODO  */
 exports.modifyUserPassword = function(db,uid, pass,callback){
 
 };
 
+// # Group managment
+
 // ## Add a group
 exports.addGroup = function(db,group,callback){
 
+    db.query("INSERT INTO groups (name) VALUES ('" + group + "')", function(err, results, fields){
+
+        if (err){
+            console.log(err);
+            if (callback !== undefined)
+                callback({status : "error", body : err});
+            return;
+        }
+
+        if (callback !== undefined)
+            callback({status : "ok", body : "Group added"});
+    });
 };
 
 // ## Delete a group
 exports.delGroup = function(db,group,callback){
 
+    exports.getGidFromName(db,group,function(r_gid){
+
+        if (r_gid < 0){
+            callback({status : "error", body : "Can't get gid : " + r_gid});
+            return;
+        }
+        else{
+
+            db.query("DELETE FROM userInGroup where gid = '" + r_gid + "'", function(err, results, fields){
+
+                if (err){
+                    console.log(err);
+                    if (callback !== undefined)
+                        callback({status : "error", body : err});
+                    return;
+                }
+
+                db.query("DELETE FROM groups where name = '" + group + "'", function(err, results, fields){
+
+                    if (err){
+                        console.log(err);
+                        if (callback !== undefined)
+                            callback({status : "error", body : err});
+                        return;
+                    }
+
+                    if (callback !== undefined)
+                        callback({status : "ok", body : "Group deleted"});
+                });
+            });
+        }
+    });
 };
 
 // ## Add a user to a group
 exports.addUserToGroup = function(db,user,group,callback){
 
+    var uid,gid;
+
+    // Getting uid
+
+    exports.getUidFromName(db,user,function(r_uid){
+
+        if (r_uid < 0){
+            callback({status : "error", body : "Can't get uid : " + r_uid});
+            return;
+        }
+        else{
+
+            uid = v_uid;
+
+            // Getting gid
+
+            exports.getGidFromName(db,group,function(r_gid){
+
+                if (r_gid < 0){
+                    callback({status : "error", body : "Can't get gid : " + r_gid});
+                    return;
+                }
+                else{
+
+                    gid = v_gid;
+
+                    // Inserting uid, gid in userInGroup
+
+                    db.query("INSERT INTO userInGroup (uid,gid) VALUES ('" + uid + "','" + gid + "')", function(err, results, fields){
+
+                        if (err){
+                            console.log(err);
+                            if (callback !== undefined)
+                                callback({status : "error", body : err});
+                            return;
+                        }
+
+                        if (callback !== undefined)
+                            callback({status : "ok", body : "Group added"});
+                        return;
+                    });
+                }
+            });
+        }
+    });
 };
 
-// ## Remove a user from a group
+// ## Remove a user from a group /* TODO  */
 exports.delUserFromGroup = function(db,user,group,callback){
 
 };
 
-// ## List groups of user
+// ## List groups of user /* TODO  */
 exports.userGroups = function(db,user,callback){
     // Should return an array with the baseGroup in the first position and the group array following
 };
+
+// ## Tell if user is in the group passed as parameter /* TODO */
+exports.userInGroup = function(db,user,group,callback){
+    
+}
+
+// # Helper functions uid/gid from name, ...
+
+// ## Return the uid from the name
+exports.getUidFromName = function(db,user,callback){
+    db.query("SELECT uid FROM users where name = '" + user + "'", function(err, results, fields){
+
+        if (err){
+            console.log(err);
+            if (callback !== undefined)
+                callback(-1);
+            return;
+        }
+
+        if (results[0] != undefined)
+            callback(results[0].uid);
+        else
+            callback(-2);
+    });
+}
+
+// ## Return the gid from the name
+exports.getGidFromName = function(db,user,callback){
+    db.query("SELECT gid FROM groups where name = '" + group + "'", function(err, results, fields){
+
+        if (err){
+            console.log(err);
+            if (callback !== undefined)
+                callback(-1);
+            return;
+        }
+
+        if (results[0] != undefined)
+            callback(results[0].gid);
+        else
+            callback(-2);
+    });
+}

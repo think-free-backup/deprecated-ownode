@@ -1,3 +1,15 @@
+        
+/* **************************************************************** 
+ *
+ *  Description : Authentication database managment
+ *  License :     All the sources are available under the GPL v3
+ *                http://www.gnu.org/licenses/gpl.html
+ *  Author : Christophe Meurice
+ *  
+ *  (C) Meurice Christophe 2012
+ *
+ ****************************************************************** */
+
 var database = require('../../lib/database');
 var libAuth = require('./lib/auth');
 
@@ -10,7 +22,13 @@ exports.init = function(db,config){
             if (err){
                 console.log(err);
             }
-            libAuth.addUser(db,'root',config.serverHostname,'root',function(){console.log("User root added")})
+            libAuth.addUser(db,'root',config.serverHostname,'root','root',function(ans){
+                if (ans.status == "ok"){
+                    libAuth.createUserKey('root',function(){console.log("User root added");});
+                }
+                else
+                    console.log("Error : " + body);
+            });
         });
     });
 

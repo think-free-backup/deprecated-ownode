@@ -1,6 +1,14 @@
-// This program is a personal cloud server api
-// All the sources are available under the GPL v3 : http://www.gnu.org/licenses/gpl.html
-// (C) Meurice Christophe 2012
+        
+/* **************************************************************** 
+ *
+ *  Description : This program is a personal cloud server api
+ *  License :     All the sources are available under the GPL v3
+ *                http://www.gnu.org/licenses/gpl.html
+ *  Author : Christophe Meurice
+ *  
+ *  (C) Meurice Christophe 2012
+ *
+ ****************************************************************** */
 
 // # Includes
 
@@ -201,7 +209,19 @@ function start(){
     }
 
     function callNodeApi(req,res,next){
+        
+        var module = api_node[req.params.module];
 
+        if (module != undefined){
+            var fct = module[req.params.function];
+            if (fct != undefined){
+                fct(db,req,res,next);
+                return;
+            }
+        }
+
+        // Module / function not found
+        res.json({type : "error", body : "This application/function doesn't exist in the api"});
     }
 
 // ## 3rdParty application call
