@@ -21,6 +21,9 @@ var cfManager = require("./lib/configManager");
 
 var auth = require('./api/auth/lib/auth');
 
+var log = require('./lib/log.js');
+log.init('.');
+
 // # Database connection holding
 
 var db;
@@ -33,7 +36,7 @@ var config = cfManager.loadConfig();
 
 if (!config.userDBCreated) {
 
-    console.log("CREATING DATABASE");
+    log.write("api","startup","CREATING DATABASE");
     database.createDB(config,db,start);
 }
 else{
@@ -58,7 +61,7 @@ function start(){
     // ## Database
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
         if (path.existsSync("./" + config.apiRoute + "/" + file + "/db.js")) {
-            console.log("Loading api module : " + file + " db");
+            log.write("api","start","Loading api module : " + file + " db");
             api_db[file] = require("./" + config.apiRoute + "/" + file + "/db.js");
             api_db[file].init(db,config);
         }
@@ -67,7 +70,7 @@ function start(){
     // ## Public
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
         if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/public.js")) {
-            console.log("Loading api module : " + file + " public");
+            log.write("api","start","Loading api module : " + file + " public");
             api_public[file] = require("./" + config.apiRoute + "/" + file + "/api/public.js");
         }
     });
@@ -75,7 +78,7 @@ function start(){
     // ## Private
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
         if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/private.js")) {
-            console.log("Loading api module : " + file + " private");
+            log.write("api","start","Loading api module : " + file + " private");
             api_private[file] = require("./" + config.apiRoute + "/" + file + "/api/private.js");
         }
     });
@@ -83,7 +86,7 @@ function start(){
     // ## Node Communication
     require("fs").readdirSync("./" + config.apiRoute).forEach(function(file) {
         if (path.existsSync("./" + config.apiRoute + "/" + file + "/api/node.js")) {
-            console.log("Loading api module : " + file + " node");
+            log.write("api","start","Loading api module : " + file + " node");
             api_node[file] = require("./" + config.apiRoute + "/" + file + "/api/node.js");
         }
     });
@@ -92,7 +95,7 @@ function start(){
 
     require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
         if (path.existsSync("./" + config.appRoute + "/" + file + "/db.js")) {
-            console.log("Loading application module : " + file + " db");
+            log.write("api","start","Loading application module : " + file + " db");
             api_db[file] = require("./" + config.appRoute + "/" + file + "/db.js");
             api_db[file].init(db,config);
         }
@@ -101,7 +104,7 @@ function start(){
     // ## Public
     require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
         if (path.existsSync("./" + config.appRoute + "/" + file + "/api/public.js")) {
-            console.log("Loading application module : " + file + " public");
+            log.write("api","start","Loading application module : " + file + " public");
             apps_public[file] = require("./" + config.appRoute + "/" + file + "/api/public.js");
         }
     });
@@ -109,7 +112,7 @@ function start(){
     // ## Private
     require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
         if (path.existsSync("./" + config.appRoute + "/" + file + "/api/private.js")) {
-            console.log("Loading application module : " + file + " private");
+            log.write("api","start","Loading application module : " + file + " private");
             apps_secure[file] = require("./" + config.appRoute + "/" + file + "/api/private.js");
         }
     });
@@ -117,7 +120,7 @@ function start(){
     // ## Node communication
     require("fs").readdirSync("./" + config.appRoute).forEach(function(file) {
         if (path.existsSync("./" + config.appRoute + "/" + file + "/api/node.js")) {
-            console.log("Loading application module : " + file + " node");
+            log.write("api","start","Loading application module : " + file + " node");
             apps_node[file] = require("./" + config.appRoute + "/" + file + "/api/node.js");
         }
     });
@@ -151,7 +154,7 @@ function start(){
 // # Starting server
 
     server.listen(config.port, function() {
-        console.log('%s listening at %s', server.name, server.url);
+        log.write("api","start",server.name + ' listening at ' + server.url);
     });
 
 // # Access methods

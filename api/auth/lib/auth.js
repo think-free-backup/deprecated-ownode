@@ -15,6 +15,7 @@ var base = require('../../../lib/base');
 var database = require('../../../lib/database');
 var cfManager = require("../../../lib/configManager");
 var exec = require('child_process').exec;
+var log = require('../../../lib/log');
 
 // # Session management
 
@@ -125,7 +126,7 @@ exports.addUser = function(db,user, host, password, baseGroup, callback){
     db.query("INSERT INTO users (name,host,password,baseGroup) VALUES ('" + user + "', '" + host + "' ,'" + password + "','" + baseGroup + "')", function(err, results, fields){
 
         if (err){
-            console.log(err);
+            log.write("api-auth","addUser",err);
             if (callback !== undefined)
                 callback({status : "error", body : err});
             return;
@@ -150,7 +151,7 @@ exports.delUser = function(db,user,callback){
             db.query("DELETE FROM userInGroup where uid = '" + r_uid + "'", function(err, results, fields){
 
                 if (err){
-                    console.log(err);
+                    log.write("api-auth","delUser",err);
                     if (callback !== undefined)
                         callback({status : "error", body : err});
                     return;
@@ -159,7 +160,7 @@ exports.delUser = function(db,user,callback){
                 db.query("DELETE FROM users WHERE name = ' " + user +" '", function(){
 
                     if (err){
-                        console.log(err);
+                        log.write("api-auth","delUser",err);
                         return;
                     }
 
@@ -190,7 +191,7 @@ exports.addGroup = function(db,group,callback){
     db.query("INSERT INTO groups (name) VALUES ('" + group + "')", function(err, results, fields){
 
         if (err){
-            console.log(err);
+            log.write("api-auth","addGroup",err);
             if (callback !== undefined)
                 callback({status : "error", body : err});
             return;
@@ -215,7 +216,7 @@ exports.delGroup = function(db,group,callback){
             db.query("DELETE FROM userInGroup where gid = '" + r_gid + "'", function(err, results, fields){
 
                 if (err){
-                    console.log(err);
+                    log.write("api-auth","delGroup",err);
                     if (callback !== undefined)
                         callback({status : "error", body : err});
                     return;
@@ -224,7 +225,7 @@ exports.delGroup = function(db,group,callback){
                 db.query("DELETE FROM groups where name = '" + group + "'", function(err, results, fields){
 
                     if (err){
-                        console.log(err);
+                        log.write("api-auth","delGroup",err);
                         if (callback !== undefined)
                             callback({status : "error", body : err});
                         return;
@@ -272,7 +273,7 @@ exports.addUserToGroup = function(db,user,group,callback){
                     db.query("INSERT INTO userInGroup (uid,gid) VALUES ('" + uid + "','" + gid + "')", function(err, results, fields){
 
                         if (err){
-                            console.log(err);
+                            log.write("api-auth","addUserToGroup",err);
                             if (callback !== undefined)
                                 callback({status : "error", body : err});
                             return;
@@ -288,9 +289,54 @@ exports.addUserToGroup = function(db,user,group,callback){
     });
 };
 
-// ## Remove a user from a group /* TODO  */
+// ## Remove a user from a group
 exports.delUserFromGroup = function(db,user,group,callback){
 
+    var uid,gid;
+
+    // Getting uid
+
+    exports.getUidFromName(db,user,function(r_uid){
+
+        if (r_uid < 0){
+            callback({status : "error", body : "Can't get uid : " + r_uid});
+            return;
+        }
+        else{
+
+            uid = v_uid;
+
+            // Getting gid
+
+            exports.getGidFromName(db,group,function(r_gid){
+
+                if (r_gid < 0){
+                    callback({status : "error", body : "Can't get gid : " + r_gid});
+                    return;
+                }
+                else{
+
+                    gid = v_gid;
+
+                    // Inserting uid, gid in userInGroup
+
+                    db.query("DELETE FROM userInGroup where uid = '" + uid + "' and gid = '" + gid + "' ", function(err, results, fields){
+
+                        if (err){
+                            log.write("api-auth","delUserFromGroup",err);
+                            if (callback !== undefined)
+                                callback({status : "error", body : err});
+                            return;
+                        }
+
+                        if (callback !== undefined)
+                            callback({status : "ok", body : "Group removed"});
+                        return;
+                    });
+                }
+            });
+        }
+    });
 };
 
 // ## List groups of user /* TODO  */
@@ -299,7 +345,7 @@ exports.userGroups = function(db,user,callback){
 };
 
 // ## Tell if user is in the group passed as parameter /* TODO */
-exports.userInGroup = function(db,user,group,callback){
+exports.userIsInGroup = function(db,user,group,callback){
     
 }
 
@@ -310,7 +356,7 @@ exports.getUidFromName = function(db,user,callback){
     db.query("SELECT uid FROM users where name = '" + user + "'", function(err, results, fields){
 
         if (err){
-            console.log(err);
+            log.write("api-auth","getUidFromName",err);
             if (callback !== undefined)
                 callback(-1);
             return;
@@ -328,7 +374,7 @@ exports.getGidFromName = function(db,user,callback){
     db.query("SELECT gid FROM groups where name = '" + group + "'", function(err, results, fields){
 
         if (err){
-            console.log(err);
+            log.write("api-auth","getGidFromName",err);
             if (callback !== undefined)
                 callback(-1);
             return;

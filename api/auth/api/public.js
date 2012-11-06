@@ -13,6 +13,7 @@
 var Cookies = require("cookies");
 var path = require('path');
 var auth = require('../lib/auth');
+var log = require('../../../lib/log');
 
 exports.login = function(db,req,res,next){
 
@@ -112,14 +113,3 @@ exports.logout = function(db,req,res,next){
     });
 };
 
-exports.friendShipRequest = function(db,req,res,next){
-    res.json({status : "error", body : "Not implemented"});
-}
-
-exports.tokenRequest = function(db,req,res,next){
-    res.json({status : "error", body : "Not implemented"});
-}
-
-exports.validateToken = function(db,req,res,next){
-    res.json({status : "error", body : "Not implemented"});
-}

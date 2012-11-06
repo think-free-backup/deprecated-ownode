@@ -12,22 +12,23 @@
 
 var database = require('../../lib/database');
 var libAuth = require('./lib/auth');
+var log = require('../../lib/log');
 
 exports.init = function(db,config){
 
-    console.log("Init auth database");
+    log.write("api-auth","init","Init auth database");
 
     database.tableDontExists('users',db,config,function(){
         db.query ('create table users (uid INT NOT NULL AUTO_INCREMENT, name CHAR(32) NOT NULL, host CHAR(64) NOT NULL,  password CHAR(32) NOT NULL, baseGroup CHAR(32) NOT NULL, PRIMARY KEY(uid) )' , function (err, results, fields){
             if (err){
-                console.log(err);
+                log.write("api-auth","init",err);
             }
             libAuth.addUser(db,'root',config.serverHostname,'root','root',function(ans){
                 if (ans.status == "ok"){
-                    libAuth.createUserKey('root',function(){console.log("User root added");});
+                    libAuth.createUserKey('root',function(){log.write("api-auth","init","User root added");});
                 }
                 else
-                    console.log("Error : " + body);
+                    log.write("api-auth","init","Error : " + body);
             });
         });
     });
@@ -35,7 +36,7 @@ exports.init = function(db,config){
     database.tableDontExists('groups',db,config,function(){
         db.query ('create table groups (gid INT NOT NULL AUTO_INCREMENT, name CHAR(32) NOT NULL, PRIMARY KEY(gid) )' , function (err, results, fields){
             if (err){
-                console.log(err);
+                log.write("api-auth","init",err);
             }
             db.query('insert into groups(name) values (\'admin\')', database.printError);
         });
@@ -44,7 +45,7 @@ exports.init = function(db,config){
     database.tableDontExists('userInGroup',db,config,function(){
         db.query ('create table userInGroup (uid INT NOT NULL, gid INT NOT NULL)' , function (err, results, fields){
             if (err){
-                console.log(err);
+                log.write("api-auth","init",err);
             }
             db.query('insert into userInGroup(uid,gid) values (1,1)', database.printError);
         });

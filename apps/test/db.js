@@ -9,7 +9,9 @@
  *  (C) Meurice Christophe 2012
  *
  ****************************************************************** */
- 
+
+var log = require('../../lib/log');
+
 exports.init = function(){
-    console.log("Init test database");
+    log.write("test","init","Init test database");
 };
