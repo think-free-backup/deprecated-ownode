@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<title>Ownode</title>
+	<meta name="description" content="Ownode">
+	<meta name="author" content="Meurice Christophe">
+
+
+	<meta name="HandheldFriendly" content="True">
+	<meta name="MobileOptimized" content="320">
+	<meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1">
+
+	<link rel="stylesheet" href="css/mobile.css">
+	<link rel="stylesheet" media="only screen and (min-width: 768px)" href="css/desktop.css">
+
+</head>
+<body>
+	<header>
+		<nav role="main_nav">
+	        <ul>
+	          <li><a id="home" class="link_with_icon" href="/"><span role="icon" data-icon="home"></span><span role="title">Home</span></a></li>
+	          <li><a id="about" class="link_with_icon" href="/about"><span role="icon" data-icon="about"></span><span role="title">About</span></a></li>
+	          <li><a id="archive" class="link_with_icon" href="/archive"><span role="icon" data-icon="archive"></span><span role="title">Archive</span></a></li>
+	        </ul>
+	    </nav>	
+	</header>
+
+	<div id="main-content">
+		<img src="../logo/ownode-shadow.png" height=40px></img>
+		<br/>
+		Remember the very first web sites we created? It was just bunch of HTML files that we uploaded to a remote host using our favorite FTP program. It was all static and it just worked. Yet it was boring. Visitors wanted sites that surprised them every time they hit refresh. Moreover, we also got tired by the slow and cumbersome process we had to follow every time to update the site. Editing content within a HTML tag soup was a chaos. We broke the sites because we forgot to close some nested tag.
+
+Along with the popularity of the LAMP (Linux, Apache, MySQL and PHP) stack, came the Content Management Systems. They seemed to be the right way to manage a web site and it didn't take long to become the de facto. CMSs allowed us to separate the content from the presentation and update our sites with just couple of mouse clicks. Anyone could run a site, even without knowing HTML.
+
+However, as our sites grow and starts attracting more traffic, we see the shortcomings of CMSs. They become slow because they render the pages for each request. You need to tune the database and servers to handle the load. To add a trivial new feature to the site you need to modify the internals of the CMS (which is often a spaghetti code). Further,they are full of vulnerabilities. Remember the day your site got hacked, because you missed one of those daily security updates? Managing a web site seems to take up your life and become a chore.
+
+On times like this, we start to feel nostalgic about the static web sites we created. "It was just bunch of HTML files. But it worked!".
+
+This inspired me to write Punch, which brings back the simplicity of static web, along with the conveniences of content management. There's no server-side code to run, no databases to configure, no mix up between HTML and the content. You can resort to your favorite tools to create the site locally, preview it in the browser and finally publish the changes to any remote host using a simple command-line interface.
+
+It's better to understand the concepts of Punch with a simple real-life example. Let's create a site using Punch to share your favorite books with others. We shall call this project as the "Reading List".
+
+If you are in a hurry, you can check the final result from here and download the source code from GitHub.
+
+Installing Punch
+
+Before we start the tutorial, let's install Punch. To run Punch you will need Node.js. Make sure you have installed Node.js (version 0.8+) on your machine. Then open up your Terminal and type:
+
+ npm install -g punch
+This will install Punch as a global package, allowing you to use it as a shell command. Enter the command punch -v to check whether Punch was installed properly. This tutorial was created using Punch version 0.4.17.
+
+Setup a New Site
+
+Let's spin off a new project for our Reading List. By running the command punch setup, you can create the project structure with essential files.
+
+ punch setup reading_list
+This will create a directory named reading_list. Inside it we will see another two directories named templates and contents. Also, you will find a file named config.json. You will learn the purpose and role of these directories and files as the tutorial progress.
+
+While we are inside the project directory, let's start the Punch server by running the command:
+
+
+	</div>
+</body>
+</html>
