@@ -13,3 +13,5 @@ echo "    ForceCommand internal-sftp" >> /etc/ssh/sshd_config
 mkdir /sftp
 chown -R root:root /sftp
 chmod 755 /sftp
+
+/etc/init.d/sshd restart

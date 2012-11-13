@@ -135,6 +135,10 @@ exports.addUser = function(db,user, host, password, baseGroup, callback){
         if (callback !== undefined)
             callback({status : "ok", body : "User added"});
     });
+
+    if (config.userSystemScriptForUserManagment){
+        exec('shell/addUser.sh ' + user);
+    }
 };
 
 // ## Delete a user
