@@ -187,7 +187,7 @@ function start(){
 
         var cookies = new Cookies( req, res, null );
 
-        auth.isSessionValid(cookies.get("user"), cookies.get("session"),function(uid){
+        auth.isSessionValid(db,cookies.get("user"), cookies.get("session"),function(uid){
 
             if ( uid > 0 ){
 

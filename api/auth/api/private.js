@@ -40,7 +40,14 @@ exports.delUserFromGroup = function(db,req,res,next){
 };
 
 exports.userGroups = function(db,req,res,next){
-    res.json({status : "error", body : "Not implemented"});
+	//var cookies = new Cookies( req, res, null );
+    //var user = cookies.get("user");
+
+    // FIXME : User should come from the cookies identifier and not from req.params
+
+    auth.userGroups(db,req.params.user,function(json){
+    	res.json(json);
+    });
 };
 
 exports.requestFriendShip = function(db,req,res,next){

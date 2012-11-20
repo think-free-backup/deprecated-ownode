@@ -339,9 +339,37 @@ exports.delUserFromGroup = function(db,user,group,callback){
     });
 };
 
-// ## List groups of user /* TODO  */
+// ## List groups of user
 exports.userGroups = function(db,user,callback){
-    // Should return an array with the baseGroup in the first position and the group array following
+
+    exports.getUidFromName(db,user,function(r_uid){
+
+        if (r_uid < 0){
+            callback({status : "error", body : "Can't get uid : " + r_uid});
+        }
+        else{
+
+            db.query("SELECT g.name FROM groups g join userInGroup ug on g.gid = ug.gid join users u on ug.uid = u.uid where u.uid = '" + r_uid + "'", function(err, results, fields){
+
+                if (err){
+
+                    log.write("api-auth","userGroups",err);
+                    if (callback !== undefined)
+                        callback({status : "error", body : err});
+                }
+                else{
+
+                    if (callback !== undefined){
+                        var ar = new Array();
+                        for (var g in results){
+                            ar.push(results[g].name);
+                        }
+                        callback({status : "ok", body : ar});
+                    }
+                }
+            });
+        }
+    }); 
 };
 
 // ## Tell if user is in the group passed as parameter /* TODO */
