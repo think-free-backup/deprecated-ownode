@@ -46,8 +46,8 @@ exports.login = function(db,req,res,next){
                     if (session.status == "ok"){
                         var cookies = new Cookies( req, res, null );
 
-                        cookies.set( "user", session.user, {  httpOnly: false } );
-                        cookies.set( "session", session.sid, {  httpOnly: false } );
+                        cookies.set( "user", session.user, {  httpOnly: true } )
+                        cookies.set( "session", session.sid, {  httpOnly: true } );
 
                         res.json({status : "ok"});
                     }

@@ -390,3 +390,8 @@ exports.getGidFromName = function(db,user,callback){
             callback(-2);
     });
 }
+
+// ## Return the user name from the user session id /* TODO */
+exports.getUserFromSession = function(db, session, callback){
+    
+}
