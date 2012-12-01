@@ -40,13 +40,13 @@ exports.delUserFromGroup = function(db,req,res,next){
 };
 
 exports.userGroups = function(db,req,res,next){
-	//var cookies = new Cookies( req, res, null );
-    //var user = cookies.get("user");
+	var cookies = new Cookies( req, res, null );
 
-    // FIXME : User should come from the cookies identifier and not from req.params
+    auth.getUserNameFromSession(db, cookies.get("user"), cookies.get("session"), function(uid){
 
-    auth.userGroups(db,req.params.user,function(json){
-    	res.json(json);
+        auth.userGroups(db,uid,function(json){
+            res.json(json);
+        });
     });
 };
 

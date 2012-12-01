@@ -144,7 +144,7 @@ exports.addUser = function(db,user, host, password, baseGroup, callback){
 // ## Delete a user
 exports.delUser = function(db,user,callback){
 
-     exports.getUidFromName(db,user,function(r_uid){
+    exports.getUidFromName(db,user,function(r_uid){
 
         if (r_uid < 0){
             callback({status : "error", body : "Can't get ugid : " + r_uid});
@@ -182,9 +182,24 @@ exports.createUserKey = function(user,callback){
     exec('shell/genkey.sh ' + user,callback);
 }
 
-// ## Modify a user password /* TODO  */
+// ## Modify a user password
 exports.modifyUserPassword = function(db,uid, pass,callback){
 
+    if (pass = ""){
+        callback(false);
+    }
+    else{
+
+        db.query("update users set password = '" + pass + "' where uid = '" + uid + "'" , function(err, results, fields) {
+
+            if (err){
+                callback (false);
+                return;
+            }
+
+            callback (true);
+        });    
+    }
 };
 
 // # Group managment
@@ -346,7 +361,18 @@ exports.delUserFromGroup = function(db,user,group,callback){
 // ## List groups of user
 exports.userGroups = function(db,user,callback){
 
-    exports.getUidFromName(db,user,function(r_uid){
+    if (isNaN(user)){
+        exports.getUidFromName(db,user,function(r_uid){
+
+            get(r_uid);
+        });    
+    }
+    else{
+        get(user);
+    }
+     
+
+    function get (r_uid){
 
         if (r_uid < 0){
             callback({status : "error", body : "Can't get uid : " + r_uid});
@@ -373,12 +399,37 @@ exports.userGroups = function(db,user,callback){
                 }
             });
         }
-    }); 
+    }
 };
 
-// ## Tell if user is in the group passed as parameter /* TODO */
+// ## Tell if user is in the group passed as parameter
 exports.userIsInGroup = function(db,user,group,callback){
     
+    exports.getUidFromName(db,user,function(r_uid){
+
+        exports.getGidFromName(db,group,function(r_gid){   
+
+            db.query("SELECT g.name FROM groups g join userInGroup ug on g.gid = ug.gid join users u on ug.uid = u.uid where u.uid = '" + r_uid + "' and g.gid = '" + r_gid + "'", function(err, results, fields){
+
+                if (err){
+
+                    log.write("api-auth","userGroups",err);
+                    if (callback !== undefined)
+                        callback({status : "error", body : err});
+                }
+                else{
+
+                    if (callback !== undefined){
+                        var ar = new Array();
+                        for (var g in results){
+                            ar.push(results[g].name);
+                        }
+                        callback({status : "ok", body : ar});
+                    }
+                }
+            });
+        });
+    });
 }
 
 // # Helper functions uid/gid from name, ...
@@ -419,7 +470,66 @@ exports.getGidFromName = function(db,user,callback){
     });
 }
 
-// ## Return the user name from the user session id /* TODO */
-exports.getUserFromSession = function(db, session, callback){
-    
+// ## Return the user id from the user session id
+exports.getUserIdFromSession = function(db, usid, sid, callback){
+
+    // > Check undefined or not and check if values passed are not sql injection
+
+    if (usid === undefined || sid === undefined){
+        callback("");
+    }
+    else{
+
+        // > Database request to check if the session is correct or not
+
+        var users = new Array();
+
+        db.query("SELECT uid FROM sessions where usid = '" + usid + "' and sid = '" + sid + "' " , function(err, results, fields) {
+
+            if (err){
+                callback ("");
+                return;
+            }
+
+            if (results[0] != undefined){
+
+                callback(results[0].uid);
+            }
+            else{
+                callback("");
+            }
+        });
+    }
+}
+
+// ## Return the user name from the user session id
+exports.getUserNameFromSession = function(db, usid, sid, callback){
+
+    // > Check undefined or not and check if values passed are not sql injection
+
+    if (usid === undefined || sid === undefined){
+        callback("");
+    }
+    else{
+
+        // > Database request to check if the session is correct or not
+
+        var users = new Array();
+
+        db.query("SELECT u.name FROM users u join sessions s on u.uid = s.uid where s.usid = '" + usid + "' and s.sid = '" + sid + "' " , function(err, results, fields) {
+
+            if (err){
+                callback ("");
+                return;
+            }
+
+            if (results[0] != undefined){
+
+                callback(results[0].name);
+            }
+            else{
+                callback("");
+            }
+        });
+    }
 }
