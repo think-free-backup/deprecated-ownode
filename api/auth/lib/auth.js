@@ -135,6 +135,10 @@ exports.addUser = function(db,user, host, password, baseGroup, callback){
         if (callback !== undefined)
             callback({status : "ok", body : "User added"});
     });
+
+    if (config.userSystemScriptForUserManagment){
+        exec('shell/addUser.sh ' + user);
+    }
 };
 
 // ## Delete a user
@@ -413,4 +417,9 @@ exports.getGidFromName = function(db,user,callback){
         else
             callback(-2);
     });
+}
+
+// ## Return the user name from the user session id /* TODO */
+exports.getUserFromSession = function(db, session, callback){
+    
 }

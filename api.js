@@ -40,6 +40,7 @@ if (!config.userDBCreated) {
     database.createDB(config,db,start);
 }
 else{
+
     start();
 }
 
@@ -154,6 +155,7 @@ function start(){
 // # Starting server
 
     server.listen(config.port, function() {
+        
         log.write("api","start",server.name + ' listening at ' + server.url);
     });
 

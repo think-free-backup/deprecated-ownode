@@ -2,12 +2,12 @@
 
 # Preparing system
 
-sudo apt-get install node npm haproxy mysql-server build-essential
+#sudo apt-get install node npm haproxy mysql-server build-essential
 sudo npm install -g node-gyp
 
 # Webdav
 
-npm install jsDAV
+# npm install jsDAV
 
 # Restify
 
